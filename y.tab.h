@@ -102,7 +102,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 19 "yacc.y"
+#line 20 "yacc.y"
 
 	struct gramTree* gramtree;
 

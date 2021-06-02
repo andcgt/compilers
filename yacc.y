@@ -1,8 +1,9 @@
 %{
-#include "tree.h"
 #include<cstdio>
 #include<cstring>
+#include<cstdlib>
 #include<iostream>
+#include "parse.h"
 using namespace std;
 
 extern char *yytext;
@@ -25,16 +26,15 @@ void yyerror(const char*);
 %token<gramtree> '+' '-' '!' '*' '/' '%' '<' '>'
 %token<gramtree> LE GE EQ NE OR AND INTNUM VAR
 
-%type<gramtree> primary_exp postfix_exp arg_exp_list
-%type<gramtree> unary_exp unary_oper mult_exp
-%type<gramtree> add_exp rel_exp eq_exp
-%type<gramtree> and_exp or_exp ass_exp exp
-%type<gramtree> typ decl init_del_list init_del
-%type<gramtree> del param_list param_decl idt_list
-%type<gramtree> init init_list sta more_sta
+%type<gramtree> primary_exp LVal del FuncFParam FuncFParams
+%type<gramtree> unary_exp unary_oper mult_exp FuncRParams
+%type<gramtree> add_exp rel_exp eq_exp const_exp
+%type<gramtree> and_exp or_exp const_init_list
+%type<gramtree> decl init_del_list init_del
+%type<gramtree> init init_list sta Block const_init
 %type<gramtree> block_item_list block_item exp_sta if_sta 
-%type<gramtree> iter_sta jump_sta ext_decl 
-%type<gramtree> func_def decl_list tran_unit
+%type<gramtree> iter_sta jump_sta ext_decl const_init_del
+%type<gramtree> func_def tran_unit const_init_del_list
 //%type<gramtree> Program
 
 %nonassoc LOWER_THAN_ELSE
@@ -47,9 +47,18 @@ Program:
 		root=create("Program",1,$1);
 	};
 
+LVal:
+	VAR{
+		$$=create("LVal",1,$1);
+	}
+	|
+	LVal '[' add_exp ']' {
+		$$=create("LVal",4,$1,$2,$3,$4);
+	}
+
 primary_exp:
-	VAR {
-		printf("primary");
+	LVal {
+		//printf("LVal");
 		$$=create("primary_exp",1,$1);
 	}
 	|
@@ -58,39 +67,30 @@ primary_exp:
 		$$=create("primary_exp",1,$1);
 	}
 	|
-	'(' exp ')' {
+	'(' add_exp ')' {
 		$$=create("primary_exp",3,$1,$2,$3);
 	};
 	
-postfix_exp:
-	primary_exp{
-		$$=create("postfix_exp",1,$1);
-	}
+FuncRParams:
+	add_exp {
+		$$=create("FuncRParams",1,$1);
+	}	
 	|
-	postfix_exp '[' exp ']' {
-		$$=create("postfix_exp",4,$1,$2,$3,$4);
-	}
-	|
-	postfix_exp '(' ')'{
-		$$=create("postfix_exp",3,$1,$2,$3);
-	}
-	|
-	postfix_exp '(' arg_exp_list ')' {
-		$$=create("postfix_exp",4,$1,$2,$3,$4);
+	FuncRParams ',' add_exp{
+		$$=create("FuncRParams",3,$1,$2,$3);
 	};
-
-arg_exp_list:
-	ass_exp{
-		$$=create("arg_exp_list",1,$1);
-	}
-	|
-	arg_exp_list ',' ass_exp {
-		$$=create("arg_exp_list",3,$1,$2,$3);
-	};
-
+	
 unary_exp:
-	postfix_exp{
+	primary_exp{
 		$$=create("unary_exp",1,$1);
+	}
+	|
+	VAR '(' FuncRParams ')'{
+		$$=create("unary_exp",4,$1,$2,$3,$4);
+	}
+	|
+	VAR '(' ')' {
+		$$=create("unary_exp",3,$1,$2,$3);
 	}
 	|
 	unary_oper unary_exp{
@@ -192,44 +192,29 @@ or_exp:
 	or_exp OR and_exp{
 		$$=create("or_exp",3,$1,$2,$3);
 	};
-	
-ass_exp:
-	or_exp{
-		//printf("or test\n");
-		$$=create("ass_exp",1,$1);
-	}
-	|
-	unary_exp '=' ass_exp{
-		$$=create("ass_exp",3,$1,$2,$3);
-	};
-	
-exp:
-	ass_exp{
-		$$=create("exp",1,$1);
-	}
-	|
-	exp ',' ass_exp{
-		$$=create("exp",3,$1,$2,$3);
-	};
 
-typ:
-	VOID {
-		$$=create("typ",1,$1);
-	}
-	|
-	INT{
-		//printf("INT test\n");
-		$$=create("typ",1,$1);
-	};
-	
 decl:
-		typ init_del_list ';' {
+		INT init_del_list ';' {
 			$$=create("decl",3,$1,$2,$3);
 		}
 		|
-		CONST typ init_del_list ';' {
+		CONST INT const_init_del_list ';' {
 			$$=create("decl",4,$1,$2,$3,$4);
 		};
+	
+const_init_del_list:	
+	const_init_del{
+		$$=create("const_init_del",1,$1);
+	}
+	|
+	const_init_del_list ',' const_init_del {
+		$$=create("const_init_del_list",3,$1,$2,$3);
+	};
+	
+const_init_del:
+	del '=' const_init {
+		$$=create("const_init_del",3,$1,$2,$3);
+	};
 	
 init_del_list:
 	init_del{
@@ -256,61 +241,49 @@ del:
 		$$=create("del",1,$1);
 	}
 	|
-	'(' del ')' {
-		$$=create("del",3,$1,$2,$3);
-	}
-	|
-	del '[' ass_exp ']' {
+	del '[' const_exp ']' {
 		$$=create("del",4,$1,$2,$3,$4);
 	}
 	|
 	del '[' ']' {
 		$$=create("del",3,$1,$2,$3);
-	}
-	|
-	del '(' param_list ')' {
-		$$=create("del",4,$1,$2,$3,$4);
-	}
-	|
-	del '(' idt_list ')' {
-		$$=create("del",4,$1,$2,$3,$4);
-	}
-	|
-	del '(' ')'{
-		//printf("() test");
-		$$=create("del",3,$1,$2,$3);
 	};
 	
-param_list:
-	param_decl {
-		$$=create("param_list",1,$1);
+const_exp:
+	add_exp {
+		$$=create("const_exp",1,$1);
+	};
+
+FuncFParams:
+	FuncFParam {
+		$$=create("FuncFParams",1,$1);
 	}
 	|
-	param_list ',' param_decl{
-		$$=create("param_list",3,$1,$2,$3);
+	FuncFParams ',' FuncFParam{
+		$$=create("FuncFParams",3,$1,$2,$3);
 	};
 	
-param_decl:
+FuncFParam:
 	INT del{
-		$$=create("param_decl",2,$1,$2);
+		$$=create("FuncFParam",2,$1,$2);
 	};
-	
-idt_list:
-	VAR{
-		$$=create("idt_list",1,$1);
-	}
-	|
-	idt_list ',' VAR{
-		$$=create("idt_list",3,$1,$2,$3);
-	};
-	
+
 init:
-	ass_exp{
-		$$=create("initalizer",1,$1);
+	add_exp{
+		$$=create("init",1,$1);
 	}	
 	|
 	'{' init_list '}'{
 		$$=create("init",3,$1,$2,$3);
+	};
+	
+const_init:
+	const_exp{
+		$$=create("const_init",1,$1);
+	}
+	|
+	'{' const_init_list '}' {
+		$$=create("const_init",3,$1,$2,$3);
 	};
 	
 init_list:
@@ -322,8 +295,17 @@ init_list:
 		$$=create("init_list",3,$1,$2,$3);
 	};
 	
+const_init_list:
+	const_init{
+		$$=create("const_init_list",1,$1);
+	}
+	|
+	const_init_list ',' const_init{
+		$$=create("const_init_list",3,$1,$2,$3);
+	};
+
 sta:
-	more_sta{
+	Block{
 		$$=create("sta",1,$1);
 	}
 	|
@@ -343,13 +325,13 @@ sta:
 		$$=create("sta",1,$1);
 	};
 	
-more_sta:
+Block:
 	'{' '}'{
-		$$=create("more_sta",2,$1,$2);
+		$$=create("Block",2,$1,$2);
 	}
 	|
 	'{' block_item_list '}' {
-		$$=create("more_sta",3,$1,$2,$3);
+		$$=create("Block",3,$1,$2,$3);
 	};
 
 block_item_list:
@@ -371,21 +353,33 @@ block_item:
 	};
 
 exp_sta:
-	exp ';'{
-		$$=create("exp_sta",2,$1,$2);
+	LVal '=' add_exp ';'{
+		$$=create("exp_sta",4,$1,$2,$3,$4);
+	}
+	|
+	';' {
+		$$=create("exp_sta",1,$1);
+	}
+	|
+	VOID VAR '(' ')' ';'{
+		$$=create("exp_sta",5,$1,$2,$3,$4,$5);
+	}
+	|
+	VOID VAR '(' FuncRParams ')' ';'{
+		$$=create("exp_sta",6,$1,$2,$3,$4,$5,$6);
 	};
 	
 if_sta:
-	IF '(' exp ')' sta %prec LOWER_THAN_ELSE{
+	IF '(' or_exp ')' sta %prec LOWER_THAN_ELSE{
 		$$=create("if_sta",5,$1,$2,$3,$4,$5);
 	}
 	|
-	IF '(' exp ')' sta ELSE sta{
+	IF '(' or_exp ')' sta ELSE sta{
 		$$=create("if_sta",7,$1,$2,$3,$4,$5,$6,$7);
 	};
 
 iter_sta:
-	WHILE '(' exp ')' sta{
+	WHILE '(' or_exp ')' sta{
 		$$=create("iter_statemenr",5,$1,$2,$3,$4,$5);
 	};
 	
@@ -394,7 +388,7 @@ jump_sta:
 		$$=create("jump_sta",2,$1,$2);
 	}
 	|
-	RETURN exp ';'{
+	RETURN add_exp ';'{
 		$$=create("jump_sta",3,$1,$2,$3);
 	}
 	|
@@ -425,25 +419,24 @@ ext_decl:
 	};
 
 func_def:
-	typ del decl_list more_sta{
-		$$=create("func_def",4,$1,$2,$3,$4);
+	INT VAR '(' FuncFParams ')' Block{
+		$$=create("func_def",6,$1,$2,$3,$4,$5,$6);
 	}
 	|
-	typ del more_sta{
+	INT VAR '(' ')' Block{
 		//printf("func test\n");
-		$$=create("func_def",3,$1,$2,$3);
-	};
-	
-decl_list:
-	decl{
-		$$=create("decl_list",1,$1);
+		$$=create("func_def",5,$1,$2,$3,$4,$5);
 	}
 	|
-	decl_list decl{
-		$$=create("decl_list",2,$1,$2);
+	VOID VAR '(' FuncFParams ')' Block{
+		$$=create("func_def",6,$1,$2,$3,$4,$5,$6);
+	}
+	|
+	VOID VAR '(' ')' Block{
+		//printf("func test\n");
+		$$=create("func_def",5,$1,$2,$3,$4,$5);
 	};
 
-	
 %%
 
 void yyerror(const char *s){
@@ -458,9 +451,11 @@ int main(int argc,char *argv[]){
 	//printf("ok1\n");
 	yyparse();
 	//printf("ok2\n");
-	printtree(root,0);
-	freeGramTree(root);
-
+	//printtree(root,0);
+	parse_unit(root->left);
+	//printf("test ok!\n");
+	
+	printCode();
 	fclose(yyin);
 }
 

@@ -3,7 +3,7 @@
 #include<cstring>
 #include<iostream>
 #include"y.tab.h"
-#include"tree.h"
+#include"parse.h"
 using namespace std;
 void comment();
 void count(void);
@@ -24,12 +24,12 @@ H					[a-fA-F0-9]
 
 "const"				{count();yylval.gramtree=create("CONST",0,yylineno);	return(CONST);}
 "int"					{count();yylval.gramtree=create("INT",0,yylineno);		return(INT);}
-"void"						{count();yylval.gramtree=create("void",0,yylineno);			return(VOID);}
-"if"						{count();yylval.gramtree=create("if",0,yylineno);			return(IF);}
-"while"						{count();yylval.gramtree=create("while",0,yylineno);			return(WHILE);}
-"break"						{count();yylval.gramtree=create("break",0,yylineno);			return(BREAK);}
-"continue"						{count();yylval.gramtree=create("continue",0,yylineno);			return(CONTINUE);}
-"return"						{count();yylval.gramtree=create("return",0,yylineno);			return(RETURN);}
+"void"						{count();yylval.gramtree=create("VOID",0,yylineno);			return(VOID);}
+"if"						{count();yylval.gramtree=create("IF",0,yylineno);			return(IF);}
+"while"						{count();yylval.gramtree=create("WHILE",0,yylineno);			return(WHILE);}
+"break"						{count();yylval.gramtree=create("BREAK",0,yylineno);			return(BREAK);}
+"continue"						{count();yylval.gramtree=create("CONTINUE",0,yylineno);			return(CONTINUE);}
+"return"						{count();yylval.gramtree=create("RETURN",0,yylineno);			return(RETURN);}
 
 
 "("						{count();yylval.gramtree=create("(",0,yylineno);			return('(');}
@@ -85,7 +85,7 @@ void count(void)
 
 void comment(){
 	char now,pre='0';
-	while (cin>>now){
+	while ((now=yyinput())!=0){
 		if (now=='/' && pre=='*')
 			return;
 		pre=now;

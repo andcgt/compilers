@@ -523,7 +523,7 @@ char *yytext;
 #include<cstring>
 #include<iostream>
 #include"y.tab.h"
-#include"tree.h"
+#include"parse.h"
 using namespace std;
 void comment();
 void count(void);
@@ -839,32 +839,32 @@ YY_RULE_SETUP
 case 5:
 YY_RULE_SETUP
 #line 27 "lex.l"
-{count();yylval.gramtree=create("void",0,yylineno);			return(VOID);}
+{count();yylval.gramtree=create("VOID",0,yylineno);			return(VOID);}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
 #line 28 "lex.l"
-{count();yylval.gramtree=create("if",0,yylineno);			return(IF);}
+{count();yylval.gramtree=create("IF",0,yylineno);			return(IF);}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
 #line 29 "lex.l"
-{count();yylval.gramtree=create("while",0,yylineno);			return(WHILE);}
+{count();yylval.gramtree=create("WHILE",0,yylineno);			return(WHILE);}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
 #line 30 "lex.l"
-{count();yylval.gramtree=create("break",0,yylineno);			return(BREAK);}
+{count();yylval.gramtree=create("BREAK",0,yylineno);			return(BREAK);}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
 #line 31 "lex.l"
-{count();yylval.gramtree=create("continue",0,yylineno);			return(CONTINUE);}
+{count();yylval.gramtree=create("CONTINUE",0,yylineno);			return(CONTINUE);}
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
 #line 32 "lex.l"
-{count();yylval.gramtree=create("return",0,yylineno);			return(RETURN);}
+{count();yylval.gramtree=create("RETURN",0,yylineno);			return(RETURN);}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
@@ -2052,7 +2052,7 @@ void count(void)
 
 void comment(){
 	char now,pre='0';
-	while (cin>>now){
+	while ((now=yyinput())!=0){
 		if (now=='/' && pre=='*')
 			return;
 		pre=now;
