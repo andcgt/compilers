@@ -30,6 +30,7 @@ H					[a-fA-F0-9]
 "break"						{count();yylval.gramtree=create("BREAK",0,yylineno);			return(BREAK);}
 "continue"						{count();yylval.gramtree=create("CONTINUE",0,yylineno);			return(CONTINUE);}
 "return"						{count();yylval.gramtree=create("RETURN",0,yylineno);			return(RETURN);}
+"else"					{count();yylval.gramtree=create("ELSE",0,yylineno);return(ELSE);}
 
 
 "("						{count();yylval.gramtree=create("(",0,yylineno);			return('(');}
@@ -57,7 +58,7 @@ H					[a-fA-F0-9]
 "||"						{count();yylval.gramtree=create("OR",0,yylineno);			return(OR);}
 "&&"						{count();yylval.gramtree=create("AND",0,yylineno);			return(AND);}
 
-0[Xx]{H}			{count();yylval.gramtree=create("INTNUM",0,yylineno);			return(INTNUM);}
+0[Xx]{H}+			{count();yylval.gramtree=create("INTNUM",0,yylineno);			return(INTNUM);}
 0[0-7]*				{count();yylval.gramtree=create("INTNUM",0,yylineno);			return(INTNUM);}
 [1-9]{digit}*			{count();yylval.gramtree=create("INTNUM",0,yylineno);	return(INTNUM);}
 {letter}{letter1}*	{count();yylval.gramtree=create("VAR",0,yylineno);			return(VAR);}
@@ -71,7 +72,7 @@ int yywrap(){
 
 void count(void)
 {
-	int i;
+	/*int i;
 
 	for (i = 0; yytext[i] != '\0'; i++)
 		if (yytext[i] == '\n')
@@ -80,7 +81,7 @@ void count(void)
 			column += 4 - (column % 4);
 		else
 			column++;
-	ECHO;
+	ECHO;*/
 }
 
 void comment(){

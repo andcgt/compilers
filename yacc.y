@@ -204,7 +204,7 @@ decl:
 	
 const_init_del_list:	
 	const_init_del{
-		$$=create("const_init_del",1,$1);
+		$$=create("const_init_del_list",1,$1);
 	}
 	|
 	const_init_del_list ',' const_init_del {
@@ -217,12 +217,12 @@ const_init_del:
 	};
 	
 init_del_list:
-	init_del{
-		$$=create("init_del",1,$1);
-	}
-	|
 	init_del_list ',' init_del {
 		$$=create("init_del_list",3,$1,$2,$3);
+	}
+	|
+	init_del{
+		$$=create("init_del_list",1,$1);
 	};
 
 init_del:
@@ -273,13 +273,21 @@ init:
 		$$=create("init",1,$1);
 	}	
 	|
+	'{' '}' {
+		$$=create("init",2,$1,$2);
+	}
+	|
 	'{' init_list '}'{
 		$$=create("init",3,$1,$2,$3);
 	};
 	
 const_init:
-	const_exp{
+	add_exp{
 		$$=create("const_init",1,$1);
+	}
+	|
+	'{' '}'{
+		$$=create("const_init",2,$1,$2);
 	}
 	|
 	'{' const_init_list '}' {
@@ -361,12 +369,12 @@ exp_sta:
 		$$=create("exp_sta",1,$1);
 	}
 	|
-	VOID VAR '(' ')' ';'{
-		$$=create("exp_sta",5,$1,$2,$3,$4,$5);
+	VAR '(' ')' ';'{
+		$$=create("exp_sta",4,$1,$2,$3,$4);
 	}
 	|
-	VOID VAR '(' FuncRParams ')' ';'{
-		$$=create("exp_sta",6,$1,$2,$3,$4,$5,$6);
+	VAR '(' FuncRParams ')' ';'{
+		$$=create("exp_sta",5,$1,$2,$3,$4,$5);
 	};
 	
 if_sta:
@@ -380,7 +388,7 @@ if_sta:
 
 iter_sta:
 	WHILE '(' or_exp ')' sta{
-		$$=create("iter_statemenr",5,$1,$2,$3,$4,$5);
+		$$=create("iter_sta",5,$1,$2,$3,$4,$5);
 	};
 	
 jump_sta:
@@ -452,9 +460,10 @@ int main(int argc,char *argv[]){
 	yyparse();
 	//printf("ok2\n");
 	//printtree(root,0);
+	addblock();
 	parse_unit(root->left);
 	//printf("test ok!\n");
-	
+	freopen("1.eeyore","w",stdout);
 	printCode();
 	fclose(yyin);
 }
