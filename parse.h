@@ -30,6 +30,12 @@ struct var_node{
 	int isconst=0;
 	int val=0;
 	int num=-1;
+	int global=1;
+	string vname;
+	int isarray=0;
+	string arrnum;
+	int paramarr=0;
+	//int isarrp=0;
 };
 
 struct array_node{
@@ -40,6 +46,8 @@ struct array_node{
 	vector<var_node>arraysize;
 	vector<var_node> a;
 	int num=-1;
+	int global=1;
+	string vname;
 };
 
 struct func_node{
@@ -51,6 +59,7 @@ struct Block{
 	bool isfunc=false;
 	map<string,struct var_node> varMap;
 	map<string,struct array_node> arrayMap;
+	map<string,int> nameMap;
 	//map<string,string> paramap;
 	string break_name;
 	string continue_name;
@@ -61,7 +70,23 @@ struct gramTree* create(string name, int num,...);
 void printtree(struct gramTree *head,int leavel);
 string inttostr(int n);
 int strtoint(string s);
+void addaddv(string v,string reg);
+void addaddi(int x,string reg);
+void addloadv(string v,string reg);
+void initloadv(string v,string reg);
+void addloadi(int x,string reg);
+void addstore(string reg,int x);
+void addvint(string v,int x);
+void addvarr(string v,int x);
+void addreturn();
 void addCode(string str);
+void gets0(var_node node);
+void gets1(var_node node);
+void gets5(var_node node1);
+void addtoStack(string name,int x);
+void add_Code(var_node node1,var_node node2);
+void add_opCode(string op,var_node node1,var_node node2);
+void add_op2Code(string op,var_node node1,var_node node2,var_node node3);
 void addvarCode(string str);
 void printCode();
 void addblock();
